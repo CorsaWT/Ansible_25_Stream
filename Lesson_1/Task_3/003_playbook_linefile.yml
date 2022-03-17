@@ -1,0 +1,49 @@
+---
+- hosts: nodes
+  become: true
+  remote_user: ansible
+
+  tasks:
+      - name: Audit net.inframes=0
+        lineinfile:
+                    path: "/etc/default/grub"
+                    regexp: '^(.*)net.ifnames=0(.*)$'
+                    state: absent
+        check_mode: yes
+        changed_when: false
+        register: auditexist1
+
+      - name: Add net.inframes=0
+        lineinfile:
+                    state: present
+                    path: "/etc/default/grub"
+                    regexp: '^(.*)GRUB_CMDLINE_LINUX="(.*)$'
+                    backrefs: yes
+                    line: '\1GRUB_CMDLINE_LINUX="net.ifnames=0 \2'
+        when: not auditexist1.found
+        notify:
+             - Apply_chages_Grub2_mkconfig  
+
+      - name: Audit biosdevname=0
+        lineinfile:
+                    path: "/etc/default/grub"
+                    regexp: '^(.*)biosdevname=0(.*)$'
+                    state: absent
+        check_mode: yes
+        changed_when: false
+        register: auditexist2
+
+      - name: Add biosdevname=0
+        lineinfile:
+                    state: present
+                    path: "/etc/default/grub"
+                    regexp: '^(.*)GRUB_CMDLINE_LINUX="(.*)$'
+                    backrefs: yes
+                    line: '\1GRUB_CMDLINE_LINUX="biosdevname=0 \2'
+        when: not auditexist2.found
+        notify:
+             - Apply_chages_Grub2_mkconfig  
+ 
+  handlers:
+      - name: Apply_chages_Grub2_mkconfig
+        command: grub2-mkconfig -o /boot/grub2/grub.cfg
