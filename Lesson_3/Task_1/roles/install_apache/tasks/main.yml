@@ -1,0 +1,33 @@
+---
+# tasks file for install_apache
+- name:  Install apache(httpd) packages 
+  yum:
+       name:  httpd
+       update_cache: yes
+       state:  latest
+  notify:
+         - Restart_httpd
+
+- name:  httpd is running on boot up
+  service:
+           name:  httpd 
+           state:  started
+           enabled:  yes
+  notify:
+         - Restart_httpd
+
+- name:  Open port 80 for http access
+  firewalld:
+             service:  http
+             permanent:  true
+             state:  enabled      
+  notify:
+         - Restart_firewalld
+
+- name:  Copy index test page
+  copy:
+        src:  "index.html"
+        dest:  "{{ destin_folder}}"
+        mode: 0555
+  notify:
+         - Restart_httpd

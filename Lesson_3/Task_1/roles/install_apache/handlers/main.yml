@@ -1,0 +1,10 @@
+---
+# handlers file for install_apache
+- name:  Restart_httpd
+  service:
+           name:  httpd
+           state:  restarted
+- name:  Restart_firewalld
+  service: 
+           name:  firewalld 
+           state:  restarted   
