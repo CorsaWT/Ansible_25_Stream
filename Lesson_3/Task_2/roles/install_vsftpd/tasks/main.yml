@@ -1,0 +1,98 @@
+---
+# tasks file for install_vsftpd
+#- name: Uninstall FTP
+#  yum:
+#       name: vsftpd
+#       state: removed
+
+- name: Install FTP
+  yum:
+       name: vsftpd
+       state: present
+
+- name: FTP started
+  service:
+           name: vsftpd
+           state: started
+
+- name: FTP enable
+  service:
+           name: vsftpd
+           enabled: yes
+
+- name: Remove default FTP configure
+  file:
+        path: "{{ ftp_conf }}/vsftpd.conf"
+        state: absent
+
+- name: Create FTP configure
+  template:
+            src: vsftpd.conf.j2
+            dest: "{{ ftp_conf }}/vsftpd.conf"
+            owner: root
+            group: root
+            mode: 0644
+
+  notify: Restart_vsftpd
+
+- name: Install policy core
+  yum:
+       name: policycoreutils-python-utils
+       state: present
+
+- name: Set SELinux Allow full read/write access for el7+
+  seboolean:
+             name: "{{ item }}"
+             state: yes
+             persistent: yes
+  loop:
+       - ftpd_anon_write
+       - ftpd_full_access
+
+- name: Upload directory check
+  stat:
+        path: "{{ ftp_root_folder }}/upload"   
+  register: folderstat
+
+- name: Create upload directory
+  file: 
+        path: "{{ ftp_root_folder }}/upload"  
+        state:  directory
+        mode: 777
+  when: folderstat.stat.exists == false
+
+- name: Permission FTP directory
+  file:
+        dest: "{{ ftp_root_folder }}"
+        owner: ftp
+        group: ftp
+        recurse: yes  
+
+- name: firewalld start and enable
+  service:
+           name: firewalld
+           state: started
+           enabled: yes   
+
+- name: FTP ports enable
+  firewalld:
+             service: ftp
+             permanent: true
+             state: enabled
+  notify: Restart_firewall
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

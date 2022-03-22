@@ -1,0 +1,4 @@
+---
+# vars file for install_vsftpd
+ftp_conf: /etc/vsftpd
+ftp_root_folder: /var/ftp/pub
